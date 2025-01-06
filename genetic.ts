@@ -6,27 +6,41 @@
 //   ) {}
 // };
 
+// shoudl this have like DEFINITE STOP, DEFINITE CONTINUE, then like VOTE STOP etc?
+// should the responses be random as well?
+enum Decision {
+  STOP,
+  CONTINUE,
+  DELEGATE,
+}
+
 abstract class Gene {
   protected abstract readonly _name: string;
 
   constructor(
+    // TODO = abstract val?
     protected _val: number, // the val to use in the handler
     protected _use: boolean // true if we actually use this gene, to see which make a difference
   ) {}
 
   // true if stop, else false
-  public stop(total: number, taken: Set<number>): boolean {
+  public stop(total: number, taken: Set<number>): Decision {
     if (this._use) {
       return this.stopHandler(total, taken);
     } else {
-      return false;
+      return Decision.DELEGATE;
     }
   }
 
-  protected abstract stopHandler(total: number, taken: Set<number>): boolean;
+  protected abstract stopHandler(total: number, taken: Set<number>): Decision;
 
   public equals(other: Gene): boolean {
-    return this._val === other._val && this._use === other._use;
+    // TODO - check type and that
+    if (this._use) {
+      return this._val === other._val && this._use === other._use;
+    } else {
+      return !other._use;
+    }
   }
 
   public toString(): string {
@@ -36,29 +50,44 @@ abstract class Gene {
 
 class MaxTotalGene extends Gene {
   protected readonly _name: string = "max-total";
-  public stopHandler(total: number, taken: Set<number>): boolean {
-    return total > this._val;
+  public stopHandler(total: number, taken: Set<number>): Decision {
+    return total > this._val ? Decision.STOP : Decision.DELEGATE;
   }
 }
 
 class MaxRiskGene extends Gene {
+  private static TOTAL_CARDS_IN_DECK: number = 78;
+
   protected readonly _name: string = "max-risk";
-  public stopHandler(total: number, taken: Set<number>): boolean {
-    return [...taken].reduce((a, b) => a + b, -taken.size) > this._val;
+  // TODO - I'm not sure this is correct tbh, it aligns with max total, I need to do the maths and see if it should be simplified this much
+  // do some maths bby
+  public stopHandler(total: number, taken: Set<number>): Decision {
+    const remaining: number = [...taken].reduce((a, b) => a + b, -taken.size);
+
+    return remaining / (MaxRiskGene.TOTAL_CARDS_IN_DECK - taken.size) >
+      this._val
+      ? Decision.STOP
+      : Decision.DELEGATE;
   }
 }
 
 // TODO - should this be included with other ones or something? I feel it should be an and
+// e.g, risk and this seeem similar right?
+// currentlt his is useless
+// should it be a range, so always conitue if greater than 5 cards, elkse ignore this etc?
+// would mean these can't just say when to STOP but also when to CONTINUE
+// so I guess rather than returning a boolean, return an enum of STOP, CONTINUE, DELEGATE_TO_OTHER
 class CurrentNumberCards extends Gene {
   protected readonly _name: string = "card-count";
-  public stopHandler(total: number, taken: Set<number>): boolean {
-    return false;
+  public stopHandler(total: number, taken: Set<number>): Decision {
+    return taken.size > this._val ? Decision.CONTINUE : Decision.DELEGATE;
   }
 }
 
 class Individual {
   private static readonly MAX_POSSIBLE_ROUND_SCORE: number = 78;
   private static readonly MAX_POSSIBLE_RISK: number = 78;
+  private static readonly MAX_POSSIBLE_NUMBER_OF_CARDS = 7;
 
   private static readonly MUTATION_CHANCE: number = 0.3;
   private static readonly CROSSOVER_CHANCE: number = 0.4;
@@ -69,8 +98,9 @@ class Individual {
         Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1)),
         Math.random() < 0.5
       ),
-      new MaxRiskGene(
-        Math.floor(Math.random() * (Individual.MAX_POSSIBLE_RISK + 1)),
+      new MaxRiskGene(Math.random(), Math.random() < 0.5),
+      new CurrentNumberCards(
+        Math.floor(Math.random() * Individual.MAX_POSSIBLE_NUMBER_OF_CARDS),
         Math.random() < 0.5
       ),
     ]);
@@ -106,7 +136,16 @@ class Individual {
   // check if any of the genes say to stop
   // TODO - do I need to randomise if it's an and or an or?
   public stop(total: number, taken: Set<number>): boolean {
-    return this._genes.some((gene: Gene) => gene.stop(total, taken));
+    const decisions: Record<Decision, number> = this._genes
+      .map((gene: Gene) => gene.stop(total, taken))
+      .reduce((returnMap: Record<Decision, number>, current: Decision) => {
+        returnMap[current] = (returnMap[current] || 0) + 1;
+        return returnMap;
+      }, {} as Record<Decision, number>);
+    return (
+      !!decisions[Decision.STOP] &&
+      decisions[Decision.STOP] >= (decisions[Decision.CONTINUE] || 0)
+    );
   }
 
   // check all genes are equal
@@ -124,8 +163,11 @@ type FitnessWrapper = {
 
 class Population {
   private static readonly GAMES: number = 100;
-
   private static readonly GOAL: number = 200;
+
+  // TODO - test this, I've done it arbitrarily to stop it from getting stuck on a terribl individual
+  // from basic tests of max, looks like you want to aim for under like, 11 which is the best I get
+  private static readonly MAX_TURNS_IN_GAME: number = 40;
 
   public static initialise(size: number): Population {
     return new Population(
@@ -169,6 +211,9 @@ class Population {
     let total: number = 0;
 
     while (total < Population.GOAL) {
+      if (turns > Population.MAX_TURNS_IN_GAME) {
+        return Infinity;
+      }
       total += this._playUntilStop(individual);
       turns++;
     }
@@ -261,6 +306,8 @@ const run: (size: number) => Individual[] = (size: number) => {
     population.printTopN(5);
     population = population.evolve();
   }
+  console.log("-".repeat(process.stdout.columns));
+  population.printTopN(20);
   return population.members;
 };
 

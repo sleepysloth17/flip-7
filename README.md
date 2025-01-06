@@ -43,3 +43,5 @@ or a mix of them all
 I guess can randomise the OR or AND
 
 Will fist do without other players, then will do with other players
+
+what about expected value?
