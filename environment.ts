@@ -9,7 +9,7 @@ export const environment: Readonly<Record<string, number>> = {
   // genetic algorithm settings
   maxRoundsPerGame: 40, // it looks like, if you aim for ~21pts a hand you win in 10-11 turns, so have picked this off the back of that
   gamesPerFitnessCalculation: 100,
-  populationSize: 100,
+  populationSize: 1000,
   mutationChance: 0.05,
   crossoverChance: 0.4,
 };

@@ -1,4 +1,5 @@
 import { environment } from "../environment";
+import { shuffle } from "../util/array";
 import { Game } from "./games";
 import { Individual } from "./individual";
 
@@ -36,13 +37,15 @@ export class Population {
       {}
     );
 
-    const toProcess: Individual[] = [...individuals];
+    shuffle(individuals);
 
-    while (toProcess.length) {
+    let start: number = 0;
+
+    while (start < individuals.length) {
       const playerGroup: Individual[] = [];
       for (let i = 0; i < environment.playersPerGame; i++) {
-        const index: number = Math.floor(Math.random() * toProcess.length);
-        playerGroup.push(toProcess.splice(index, 1)[0]);
+        playerGroup.push(individuals[start]);
+        start++;
       }
 
       for (let i = 0; i < environment.gamesPerFitnessCalculation; i++) {

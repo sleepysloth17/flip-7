@@ -1,4 +1,5 @@
 import { environment } from "../environment";
+import { shuffle } from "../util/array";
 import { Individual } from "./individual";
 
 // TODO - this object should be bigger and I should be able to pass it into the stop handler
@@ -129,40 +130,43 @@ export class Game {
 
 class Deck {
   public static create(): Deck {
-    return new Deck(Deck.getEmptyDeck());
+    const deck: Deck = new Deck(
+      new Array(12)
+        .fill(null)
+        .flatMap((_: null, i: number) =>
+          new Array(i + 1)
+            .fill(i + 1)
+            .map((val: number) => new Card(CardType.NUMBER, val))
+        )
+        .concat(new Card(CardType.NUMBER, 0))
+        .concat(
+          new Card(CardType.SPECIAL_NUMBER, 2),
+          new Card(CardType.SPECIAL_NUMBER, 4),
+          new Card(CardType.SPECIAL_NUMBER, 6),
+          new Card(CardType.SPECIAL_NUMBER, 8),
+          new Card(CardType.SPECIAL_NUMBER, 10)
+        )
+    );
+    deck.reshuffle();
+    return deck;
   }
 
-  private static getEmptyDeck(): Card[] {
-    return new Array(12)
-      .fill(null)
-      .flatMap((_: null, i: number) =>
-        new Array(i + 1)
-          .fill(i + 1)
-          .map((val: number) => new Card(CardType.NUMBER, val))
-      )
-      .concat(new Card(CardType.NUMBER, 0))
-      .concat(
-        new Card(CardType.SPECIAL_NUMBER, 2),
-        new Card(CardType.SPECIAL_NUMBER, 4),
-        new Card(CardType.SPECIAL_NUMBER, 6),
-        new Card(CardType.SPECIAL_NUMBER, 8),
-        new Card(CardType.SPECIAL_NUMBER, 10)
-      );
-  }
+  private toDraw: number = 0;
 
   constructor(private _deck: Card[]) {}
 
   public reshuffle(): void {
-    this._deck = Deck.getEmptyDeck();
+    shuffle(this._deck);
+    this.toDraw = 0;
   }
 
+  // instead of all the splicing, do I want to shuffle then iterate along?
   public draw(): Card {
-    const index: number = Math.floor(Math.random() * this._deck.length);
-    return this._deck.splice(index, 1)[0];
+    return this._deck[this.toDraw++];
   }
 
   public isEmpty(): boolean {
-    return !!this._deck.length;
+    return this.toDraw === this._deck.length;
   }
 }
 
