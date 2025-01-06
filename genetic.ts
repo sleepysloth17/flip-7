@@ -98,7 +98,10 @@ class Individual {
         Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1)),
         Math.random() < 0.5
       ),
-      new MaxRiskGene(Math.random(), Math.random() < 0.5),
+      new MaxRiskGene(
+        Math.round(Math.random() * 100) / 100,
+        Math.random() < 0.5
+      ),
       new CurrentNumberCards(
         Math.floor(Math.random() * Individual.MAX_POSSIBLE_NUMBER_OF_CARDS),
         Math.random() < 0.5
@@ -142,9 +145,11 @@ class Individual {
         returnMap[current] = (returnMap[current] || 0) + 1;
         return returnMap;
       }, {} as Record<Decision, number>);
+    // TODO - work this out, should CONTINUE just make it contiue, then check stop, then continue otherwise?
+    return !decisions[Decision.CONTINUE] ? !!decisions[Decision.STOP] : false;
     return (
       !!decisions[Decision.STOP] &&
-      decisions[Decision.STOP] >= (decisions[Decision.CONTINUE] || 0)
+      decisions[Decision.STOP] > (decisions[Decision.CONTINUE] || 0)
     );
   }
 
