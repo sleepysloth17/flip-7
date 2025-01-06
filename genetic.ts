@@ -30,7 +30,7 @@ abstract class Gene {
   }
 
   public toString(): string {
-    return `name: ${this._name}, val: ${this._val}, use: ${this._use}`;
+    return `{name: ${this._name}, val: ${this._val}, use: ${this._use}}`;
   }
 }
 
@@ -48,6 +48,14 @@ class MaxRiskGene extends Gene {
   }
 }
 
+// TODO - should this be included with other ones or something? I feel it should be an and
+class CurrentNumberCards extends Gene {
+  protected readonly _name: string = "card-count";
+  public stopHandler(total: number, taken: Set<number>): boolean {
+    return false;
+  }
+}
+
 class Individual {
   private static readonly MAX_POSSIBLE_ROUND_SCORE: number = 78;
   private static readonly MAX_POSSIBLE_RISK: number = 78;
@@ -61,15 +69,15 @@ class Individual {
         Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1)),
         Math.random() < 0.5
       ),
-      new MaxTotalGene(
+      new MaxRiskGene(
         Math.floor(Math.random() * (Individual.MAX_POSSIBLE_RISK + 1)),
         Math.random() < 0.5
       ),
     ]);
   }
 
-  public get geneString(): string[] {
-    return this._genes.map((gene: Gene) => gene.toString());
+  public get geneString(): string {
+    return this._genes.map((gene: Gene) => gene.toString()).join(" ");
   }
 
   constructor(private _genes: Gene[]) {}
@@ -96,6 +104,7 @@ class Individual {
   }
 
   // check if any of the genes say to stop
+  // TODO - do I need to randomise if it's an and or an or?
   public stop(total: number, taken: Set<number>): boolean {
     return this._genes.some((gene: Gene) => gene.stop(total, taken));
   }
@@ -249,7 +258,7 @@ const run: (size: number) => Individual[] = (size: number) => {
   let population: Population = Population.initialise(size);
   while (!population.converged()) {
     console.log("-".repeat(process.stdout.columns));
-    population.printTopN(20);
+    population.printTopN(5);
     population = population.evolve();
   }
   return population.members;
