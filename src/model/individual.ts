@@ -46,13 +46,18 @@ export class Individual {
     return new Individual(crypto.randomUUID(), newGenes);
   }
 
-  // TODO - this should be better
+  // TODO - could be better
   public mutate(): Individual {
-    if (Math.random() < environment.mutationChance) {
-      return Individual.generate(this.id);
+    const newGenes: Gene[] = [];
+    for (const gene of Object.values(this._genes)) {
+      if (Math.random() < environment.mutationChance) {
+        newGenes.push(GeneFactory.generate(gene.type));
+      } else {
+        newGenes.push(gene);
+      }
     }
 
-    return this;
+    return new Individual(this.id, newGenes);
   }
 
   public stop(total: number, taken: Set<number>): boolean {

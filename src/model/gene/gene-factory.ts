@@ -9,10 +9,10 @@ import {
 
 export class GeneFactory {
   public static generateForList(geneTypes: GeneType[]): Gene[] {
-    return geneTypes.map(GeneFactory.generate).filter(Boolean) as Gene[];
+    return geneTypes.map(GeneFactory.generate);
   }
 
-  private static generate(geneType: GeneType): Gene | null {
+  public static generate(geneType: GeneType): Gene {
     switch (geneType) {
       case GeneType.MAX_TOTAL: {
         return new MaxTotalGene(
@@ -33,7 +33,7 @@ export class GeneFactory {
         );
       }
       default: {
-        return null;
+        throw new Error(`No gene of type ${geneType}`);
       }
     }
   }
