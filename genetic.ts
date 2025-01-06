@@ -1,8 +1,44 @@
-type Gene = {
-  val: number; // the val to use in the handler
-  use: boolean; // true if we actually use this gene, to see which make a difference
-  handler: (args: any[]) => boolean; // true if continue, else false
-};
+// class Gene {
+//   constructor(
+//     private val: number; // the val to use in the handler
+//   use: boolean; // true if we actually use this gene, to see which make a difference
+//   stop: (total: number, taken: Set<number>) => boolean; // true if stop, else false
+//   ) {}
+// };
+
+abstract class Gene {
+  constructor(
+    protected _val: number, // the val to use in the handler
+    protected _use: boolean // true if we actually use this gene, to see which make a difference
+  ) {}
+
+  // true if stop, else false
+  public stop(total: number, taken: Set<number>): boolean {
+    if (this._use) {
+      return this.stopHandler(total, taken);
+    } else {
+      return false;
+    }
+  }
+
+  protected abstract stopHandler(total: number, taken: Set<number>): boolean;
+
+  public equals(other: Gene): boolean {
+    return this._val === other._val && this._use === other._use;
+  }
+}
+
+class MaxTotalGene extends Gene {
+  public stopHandler(total: number, taken: Set<number>): boolean {
+    return total > this._val;
+  }
+}
+
+class MaxRiskGene extends Gene {
+  public stopHandler(total: number, taken: Set<number>): boolean {
+    return [...taken].reduce((a, b) => a + b, -taken.size) > this._val;
+  }
+}
 
 class Individual {
   private static readonly MAX_POSSIBLE_ROUND_SCORE: number = 78;
@@ -12,29 +48,31 @@ class Individual {
   private static readonly CROSSOVER_CHANCE: number = 0.4;
 
   public static generate(): Individual {
-    return new Individual(
-      Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1)),
-      Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1))
-    );
+    return new Individual([
+      new MaxTotalGene(
+        Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1)),
+        Math.random() < 0.5
+      ),
+      new MaxTotalGene(
+        Math.floor(Math.random() * (Individual.MAX_POSSIBLE_RISK + 1)),
+        Math.random() < 0.5
+      ),
+    ]);
   }
 
-  // TODO - work out genes and change methods as appropriate
-  constructor(private _maxTotal: number, private _maxRisk: number) {}
+  constructor(private _genes: Gene[]) {}
 
-  // maybe array with gene and how each is handled?
   public crossover(other: Individual): Individual {
-    let childMaxTotal: number = this._maxTotal;
-    let childMaxRisk: number = this._maxRisk;
-
-    if (Math.random() < Individual.CROSSOVER_CHANCE) {
-      childMaxTotal = other._maxTotal;
+    const newGenes: Gene[] = [];
+    for (let i = 0; i < this._genes.length; i++) {
+      if (Math.random() < Individual.CROSSOVER_CHANCE) {
+        newGenes.push(other._genes[i]);
+      } else {
+        newGenes.push(this._genes[i]);
+      }
     }
 
-    if (Math.random() < Individual.CROSSOVER_CHANCE) {
-      childMaxRisk = other._maxRisk;
-    }
-
-    return new Individual(childMaxTotal, childMaxRisk);
+    return new Individual(newGenes);
   }
 
   public mutate(): Individual {
@@ -46,15 +84,13 @@ class Individual {
   }
 
   public stop(total: number, taken: Set<number>): boolean {
-    return (
-      total > this._maxTotal &&
-      [...taken].reduce((a, b) => a + b, 0) - taken.size > this._maxRisk
-    );
+    return this._genes.some((gene: Gene) => gene.stop(total, taken));
   }
 
+  // check all genes are equal
   public equals(other: Individual): boolean {
-    return (
-      this._maxTotal === other._maxTotal && this._maxRisk === other._maxRisk
+    return this._genes.every((gene: Gene, index: number) =>
+      gene.equals(other._genes[index])
     );
   }
 }
@@ -83,7 +119,17 @@ class Population {
 
   constructor(individuals: Individual[]) {
     this._members = this._sortbyFitness(individuals);
-    console.log(this._members.slice(0, 20));
+    console.log(
+      this._members
+        .slice(0, 20)
+        .map((f: FitnessWrapper) => [
+          f.fitness,
+          (f.individual as any)._genes.flatMap((g: Gene) => [
+            (g as any)._val,
+            (g as any)._use,
+          ]),
+        ])
+    );
   }
 
   private _sortbyFitness(individuals: Individual[]): FitnessWrapper[] {
@@ -198,4 +244,4 @@ const run: (size: number) => Individual[] = (size: number) => {
   return population.members;
 };
 
-run(10000);
+run(1000);
