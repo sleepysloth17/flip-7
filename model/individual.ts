@@ -1,4 +1,13 @@
-class Individual {
+import {
+  MaxTotalGene,
+  MaxRiskGene,
+  CurrentNumberCards,
+  Gene,
+  GeneType,
+  Decision,
+} from "./gene";
+
+export class Individual {
   private static readonly MAX_POSSIBLE_ROUND_SCORE: number = 78;
   private static readonly MAX_POSSIBLE_RISK: number = 78;
   private static readonly MAX_POSSIBLE_NUMBER_OF_CARDS = 7;
@@ -24,19 +33,31 @@ class Individual {
   }
 
   public get geneString(): string {
-    return this._genes.map((gene: Gene) => gene.toString()).join(" ");
+    return Object.values(this._genes)
+      .map((gene: Gene) => gene.toString())
+      .join(" ");
   }
 
+  private _genes: Record<GeneType, Gene>;
+
   // TODO -  could genes be a map from type to gene? that way we don't neccessarily need all genes
-  constructor(private _genes: Gene[]) {}
+  constructor(geneList: Gene[]) {
+    this._genes = geneList.reduce(
+      (returnMap: Record<GeneType, Gene>, current: Gene) => {
+        returnMap[current.type] = current;
+        return returnMap;
+      },
+      {} as Record<GeneType, Gene>
+    );
+  }
 
   public crossover(other: Individual): Individual {
     const newGenes: Gene[] = [];
-    for (let i = 0; i < this._genes.length; i++) {
+    for (const gene of Object.values(this._genes)) {
       if (Math.random() < Individual.CROSSOVER_CHANCE) {
-        newGenes.push(other._genes[i]);
+        newGenes.push(other._genes[gene.type]);
       } else {
-        newGenes.push(this._genes[i]);
+        newGenes.push(gene);
       }
     }
 
@@ -54,7 +75,7 @@ class Individual {
   // check if any of the genes say to stop
   // TODO - add strategy gene to work out if we continue until no continues, or stop on single stop etc?
   public stop(total: number, taken: Set<number>): boolean {
-    const decisions: Record<Decision, number> = this._genes
+    const decisions: Record<Decision, number> = Object.values(this._genes)
       .map((gene: Gene) => gene.stop(total, taken))
       .reduce((returnMap: Record<Decision, number>, current: Decision) => {
         returnMap[current] = (returnMap[current] || 0) + 1;
@@ -70,8 +91,8 @@ class Individual {
 
   // check all genes are equal
   public equals(other: Individual): boolean {
-    return this._genes.every((gene: Gene, index: number) =>
-      gene.equals(other._genes[index])
+    return Object.values(this._genes).every((gene: Gene, index: number) =>
+      gene.equals(other._genes[gene.type])
     );
   }
 }

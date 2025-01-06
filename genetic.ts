@@ -1,4 +1,5 @@
 import { Population } from "./model/population";
+import { Individual } from "./model/individual";
 
 /**
  * 1) Randomly initialize populations p

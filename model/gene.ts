@@ -1,13 +1,17 @@
-enum Decision {
+export enum Decision {
   STOP,
   CONTINUE,
   DELEGATE,
 }
 
-type GeneType = "max-total" | "max-risk" | "card-count";
+export enum GeneType {
+  MAX_TOTAL = "MAX_TOTAL",
+  MAX_RISK = "MAX_RISK",
+  CARD_COUNT = "CARD_COUNT",
+}
 
-abstract class Gene {
-  protected abstract readonly _type: GeneType;
+export abstract class Gene {
+  public abstract readonly type: GeneType;
 
   constructor(
     // TODO - generic val?
@@ -26,7 +30,7 @@ abstract class Gene {
   protected abstract stopHandler(total: number, taken: Set<number>): Decision;
 
   public equals(other: Gene): boolean {
-    if (this._type === other._type) {
+    if (this.type === other.type) {
       return false;
     }
 
@@ -38,22 +42,22 @@ abstract class Gene {
   }
 
   public toString(): string {
-    return `{name: ${this._type}, val: ${this._val}, use: ${this._use}}`;
+    return `{name: ${this.type}, val: ${this._val}, use: ${this._use}}`;
   }
 }
 
-class MaxTotalGene extends Gene {
-  protected readonly _type: GeneType = "max-total";
+export class MaxTotalGene extends Gene {
+  public readonly type: GeneType = GeneType.MAX_TOTAL;
 
   public stopHandler(total: number, taken: Set<number>): Decision {
     return total > this._val ? Decision.STOP : Decision.DELEGATE;
   }
 }
 
-class MaxRiskGene extends Gene {
+export class MaxRiskGene extends Gene {
   private static TOTAL_CARDS_IN_DECK: number = 78;
 
-  protected readonly _type: GeneType = "max-risk";
+  public readonly type: GeneType = GeneType.MAX_RISK;
 
   // TODO - I'm not sure this is correct tbh, it aligns with max total, I need to do the maths and see if it should be simplified this much
   // do some maths bby
@@ -73,8 +77,8 @@ class MaxRiskGene extends Gene {
 // should it be a range, so always conitue if greater than 5 cards, elkse ignore this etc?
 // would mean these can't just say when to STOP but also when to CONTINUE
 // so I guess rather than returning a boolean, return an enum of STOP, CONTINUE, DELEGATE_TO_OTHER
-class CurrentNumberCards extends Gene {
-  protected readonly _type: GeneType = "card-count";
+export class CurrentNumberCards extends Gene {
+  public readonly type: GeneType = GeneType.CARD_COUNT;
 
   public stopHandler(total: number, taken: Set<number>): Decision {
     return taken.size > this._val ? Decision.CONTINUE : Decision.DELEGATE;

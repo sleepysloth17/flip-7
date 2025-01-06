@@ -1,3 +1,5 @@
+import { Individual } from "./individual";
+
 type FitnessWrapper = {
   individual: Individual;
   fitness: number;
@@ -7,8 +9,7 @@ export class Population {
   private static readonly GAMES: number = 100;
   private static readonly GOAL: number = 200;
 
-  // TODO - test this, I've done it arbitrarily to stop it from getting stuck on a terribl individual
-  // from basic tests of max, looks like you want to aim for under like, 11 which is the best I get
+  // it looks like, if you aim for ~21pts a hand you win in 10-11 turns, so have picked this off the back of that
   private static readonly MAX_TURNS_IN_GAME: number = 40;
 
   public static initialise(size: number): Population {
@@ -39,6 +40,13 @@ export class Population {
       .sort((a: FitnessWrapper, b: FitnessWrapper) => a.fitness - b.fitness);
   }
 
+  // split into groups of N
+  // play 1 game
+  // return total turns in teh fitness thing
+  // repeat GAMES times
+  // then at the end, divide the turns by games to get fitness
+  // I guess fitness can basically be "did they win against the other ones"
+  // more wins = better
   private _calculateFitness(individual: Individual): number {
     let totalTurns: number = 0;
     for (let i = 0; i < Population.GAMES; i++) {
@@ -103,6 +111,7 @@ export class Population {
   }
 
   /**
+   * Process:
    * a) Select parents from population
    * b) Crossover and generate new population
    * c) Perform mutation on new population
