@@ -1,23 +1,40 @@
+type Gene = {
+  val: number; // the val to use in the handler
+  use: boolean; // true if we actually use this gene, to see which make a difference
+  handler: (args: any[]) => boolean; // true if continue, else false
+};
+
 class Individual {
   private static readonly MAX_POSSIBLE_ROUND_SCORE: number = 78;
+  private static readonly MAX_POSSIBLE_RISK: number = 78;
 
   private static readonly MUTATION_CHANCE: number = 0.3;
   private static readonly CROSSOVER_CHANCE: number = 0.4;
 
   public static generate(): Individual {
     return new Individual(
+      Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1)),
       Math.floor(Math.random() * (Individual.MAX_POSSIBLE_ROUND_SCORE + 1))
     );
   }
 
   // TODO - work out genes and change methods as appropriate
-  constructor(private _maxTotal: number) {}
+  constructor(private _maxTotal: number, private _maxRisk: number) {}
 
+  // maybe array with gene and how each is handled?
   public crossover(other: Individual): Individual {
+    let childMaxTotal: number = this._maxTotal;
+    let childMaxRisk: number = this._maxRisk;
+
     if (Math.random() < Individual.CROSSOVER_CHANCE) {
-      return new Individual(other._maxTotal);
+      childMaxTotal = other._maxTotal;
     }
-    return this;
+
+    if (Math.random() < Individual.CROSSOVER_CHANCE) {
+      childMaxRisk = other._maxRisk;
+    }
+
+    return new Individual(childMaxTotal, childMaxRisk);
   }
 
   public mutate(): Individual {
@@ -28,12 +45,17 @@ class Individual {
     return this;
   }
 
-  public stop(total: number): boolean {
-    return total > this._maxTotal;
+  public stop(total: number, taken: Set<number>): boolean {
+    return (
+      total > this._maxTotal &&
+      [...taken].reduce((a, b) => a + b, 0) - taken.size > this._maxRisk
+    );
   }
 
   public equals(other: Individual): boolean {
-    return this._maxTotal === other._maxTotal;
+    return (
+      this._maxTotal === other._maxTotal && this._maxRisk === other._maxRisk
+    );
   }
 }
 
@@ -110,7 +132,7 @@ class Population {
       return deck.splice(index, 1)[0];
     };
 
-    while (deck.length && taken.size < 7 && !individual.stop(total)) {
+    while (deck.length && taken.size < 7 && !individual.stop(total, taken)) {
       const num: number = take();
 
       if (taken.has(num)) {
@@ -176,4 +198,4 @@ const run: (size: number) => Individual[] = (size: number) => {
   return population.members;
 };
 
-run(1000);
+run(10000);
