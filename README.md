@@ -49,3 +49,7 @@ what about expected value?
 oooo do I have like, one rule for number of cards that says you HAVE to conitune, and one which suggested or seomthing?
 I need to basically put every potential strategy in as part of a gene and see which combination works best
 what about the individual has a straegy? e.g prefer CONTINUE, prefer STOP etc which changes what the genes say
+
+TODO:
+
+- Need speical card handler, as secdond chance etc should really be handled differently

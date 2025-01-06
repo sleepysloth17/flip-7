@@ -1,6 +1,7 @@
 import { environment } from "../environment";
 import { Individual } from "./individual";
 
+// TODO - this object should be bigger and I should be able to pass it into the stop handler
 type PlayerStatus = {
   total: number;
   taken: Set<number>;
@@ -85,9 +86,12 @@ export class Game {
           playersInRound.splice(0, 1);
           i--;
         } else {
-          const draw: number = this._deck.draw();
+          const card: Card = this._deck.draw();
 
-          if (roundScore[individual.id].taken.has(draw)) {
+          if (
+            card.type === CardType.NUMBER &&
+            roundScore[individual.id].taken.has(card.value)
+          ) {
             roundScore[individual.id] = {
               total: 0,
               taken: new Set(),
@@ -95,8 +99,10 @@ export class Game {
             playersInRound.splice(0, 1);
             i--;
           } else {
-            roundScore[individual.id].taken.add(draw);
-            roundScore[individual.id].total += draw;
+            if (card.type === CardType.NUMBER) {
+              roundScore[individual.id].taken.add(card.value);
+            }
+            roundScore[individual.id].total += card.value;
 
             if (
               roundScore[individual.id].taken.size ===
@@ -123,22 +129,34 @@ export class Game {
 
 class Deck {
   public static create(): Deck {
-    return new Deck(
-      new Array(12)
-        .fill(null)
-        .flatMap((_: null, i: number) => new Array(i + 1).fill(i + 1))
-    );
+    return new Deck(Deck.getEmptyDeck());
   }
 
-  constructor(private _deck: number[]) {}
+  private static getEmptyDeck(): Card[] {
+    return new Array(12)
+      .fill(null)
+      .flatMap((_: null, i: number) =>
+        new Array(i + 1)
+          .fill(i + 1)
+          .map((val: number) => new Card(CardType.NUMBER, val))
+      )
+      .concat(new Card(CardType.NUMBER, 0))
+      .concat(
+        new Card(CardType.SPECIAL_NUMBER, 2),
+        new Card(CardType.SPECIAL_NUMBER, 4),
+        new Card(CardType.SPECIAL_NUMBER, 6),
+        new Card(CardType.SPECIAL_NUMBER, 8),
+        new Card(CardType.SPECIAL_NUMBER, 10)
+      );
+  }
+
+  constructor(private _deck: Card[]) {}
 
   public reshuffle(): void {
-    this._deck = new Array(12)
-      .fill(null)
-      .flatMap((_: null, i: number) => new Array(i + 1).fill(i + 1));
+    this._deck = Deck.getEmptyDeck();
   }
 
-  public draw(): number {
+  public draw(): Card {
     const index: number = Math.floor(Math.random() * this._deck.length);
     return this._deck.splice(index, 1)[0];
   }
@@ -146,4 +164,17 @@ class Deck {
   public isEmpty(): boolean {
     return !!this._deck.length;
   }
+}
+
+enum CardType {
+  NUMBER = "NUMBER",
+  TIMES_TWO = "TIMES_TWO",
+  SPECIAL_NUMBER = "SPECIAL_NUMBER",
+  SECOND_CHANGE = "SECOND_CHANCE",
+  FREEZE = "FREEZE",
+  FLIP_THREE = "FLIP_THREE",
+}
+
+class Card {
+  constructor(public readonly type: CardType, public readonly value: number) {}
 }
