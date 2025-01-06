@@ -1,3 +1,4 @@
+import { Game } from "./games";
 import { Individual } from "./individual";
 
 type FitnessWrapper = {
@@ -7,14 +8,14 @@ type FitnessWrapper = {
 
 export class Population {
   private static readonly GAMES: number = 100;
-  private static readonly GOAL: number = 200;
 
-  // it looks like, if you aim for ~21pts a hand you win in 10-11 turns, so have picked this off the back of that
-  private static readonly MAX_TURNS_IN_GAME: number = 40;
+  private static readonly PLAYERS_PER_GAME: number = 4;
 
   public static initialise(size: number): Population {
     return new Population(
-      new Array(size).fill(null).map(() => Individual.generate())
+      new Array(size * Population.PLAYERS_PER_GAME)
+        .fill(null)
+        .map((_: null, index: number) => Individual.generate(index))
     );
   }
 
@@ -28,79 +29,42 @@ export class Population {
     this._members = this._sortbyFitness(individuals);
   }
 
+  // TODO - do I want them to play the same people G times, or reshuffle everytime
   private _sortbyFitness(individuals: Individual[]): FitnessWrapper[] {
+    const fitnessMap: Record<number, number> = individuals.reduce(
+      (returnMap: Record<number, number>, current: Individual) => {
+        returnMap[current.id] = 0;
+        return returnMap;
+      },
+      {}
+    );
+
+    const toProcess: Individual[] = [...individuals];
+
+    while (toProcess.length) {
+      const playerGroup: Individual[] = [];
+      for (let i = 0; i < Population.PLAYERS_PER_GAME; i++) {
+        const index: number = Math.floor(Math.random() * toProcess.length);
+        playerGroup.push(toProcess.splice(index, 1)[0]);
+      }
+
+      for (let i = 0; i < Population.GAMES; i++) {
+        const roundWinner: Individual | null = Game.create(playerGroup).play();
+        if (roundWinner) {
+          fitnessMap[roundWinner.id] += 1;
+        }
+      }
+    }
+
     return individuals
       .map((individual: Individual) => {
-        const fitness: number = this._calculateFitness(individual);
+        const fitness: number = fitnessMap[individual.id];
         return {
           individual,
           fitness,
         };
       })
-      .sort((a: FitnessWrapper, b: FitnessWrapper) => a.fitness - b.fitness);
-  }
-
-  // split into groups of N
-  // play 1 game
-  // return total turns in teh fitness thing
-  // repeat GAMES times
-  // then at the end, divide the turns by games to get fitness
-  // I guess fitness can basically be "did they win against the other ones"
-  // more wins = better
-  private _calculateFitness(individual: Individual): number {
-    let totalTurns: number = 0;
-    for (let i = 0; i < Population.GAMES; i++) {
-      totalTurns += this._getTurnsForGame(individual);
-
-      if (totalTurns === Infinity) {
-        return Infinity;
-      }
-    }
-
-    return totalTurns / Population.GAMES;
-  }
-
-  private _getTurnsForGame(individual: Individual): number {
-    let turns: number = 0;
-    let total: number = 0;
-
-    while (total < Population.GOAL) {
-      if (turns > Population.MAX_TURNS_IN_GAME) {
-        return Infinity; // taken too long, not worth continuing
-      }
-
-      total += this._playUntilStop(individual);
-      turns++;
-    }
-
-    return turns;
-  }
-
-  private _playUntilStop(individual: Individual): number {
-    const deck: number[] = new Array(12)
-      .fill(null)
-      .flatMap((_: null, i: number) => new Array(i + 1).fill(i + 1));
-
-    let total: number = 0;
-    let taken: Set<number> = new Set();
-
-    const take: () => number = () => {
-      const index: number = Math.floor(Math.random() * deck.length);
-      return deck.splice(index, 1)[0];
-    };
-
-    while (deck.length && taken.size < 7 && !individual.stop(total, taken)) {
-      const num: number = take();
-
-      if (taken.has(num)) {
-        return 0;
-      }
-
-      total += num;
-      taken.add(num);
-    }
-
-    return total + (taken.size === 7 ? 15 : 0);
+      .sort((a: FitnessWrapper, b: FitnessWrapper) => b.fitness - a.fitness);
   }
 
   // TODO - can I work out a better way to do this?
@@ -121,7 +85,7 @@ export class Population {
     // TODO - to pick, do I do the number line thing with (1 / fitness) ^ 2 ? OR do I just pick the first like, 10% as here? to send to the new one?
     const newPopulation: Individual[] = this._members
       .slice(0, Math.floor(this._members.length / 10))
-      .map(({ individual }) => individual);
+      .map(({ individual }, index: number) => individual.changeId(index));
 
     while (newPopulation.length < this._members.length) {
       // TODO - currentl pick from top 50% to mate, should it be better?
@@ -133,7 +97,7 @@ export class Population {
         this._members[
           Math.floor(Math.random() * Math.floor(this._members.length / 2))
         ].individual;
-      newPopulation.push(individual1.crossover(individual2));
+      newPopulation.push(individual1.mate(this._members.length, individual2));
     }
 
     newPopulation.forEach((individual: Individual) => individual.mutate());

@@ -18,4 +18,4 @@ const run: (size: number) => Individual[] = (size: number) => {
   return population.members;
 };
 
-run(1000);
+run(10);

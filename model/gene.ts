@@ -4,10 +4,13 @@ export enum Decision {
   DELEGATE,
 }
 
+// max stops there, min continues there
 export enum GeneType {
   MAX_TOTAL = "MAX_TOTAL",
+  MIN_TOTAL = "MIN_TOTAL", // TODO - continues
   MAX_RISK = "MAX_RISK",
-  CARD_COUNT = "CARD_COUNT",
+  MIN_RISK = "MIN_RISK", // TODO - continues
+  MIN_CARD_COUNT = "MIN_CARD_COUNT",
 }
 
 export abstract class Gene {
@@ -30,15 +33,13 @@ export abstract class Gene {
   protected abstract stopHandler(total: number, taken: Set<number>): Decision;
 
   public equals(other: Gene): boolean {
-    if (this.type === other.type) {
+    if (this.type !== other.type) {
       return false;
-    }
-
-    if (this._use) {
-      return this._val === other._val && this._use === other._use;
-    } else {
+    } else if (!this._use) {
       return !other._use;
     }
+
+    return this._val === other._val && this._use === other._use;
   }
 
   public toString(): string {
@@ -46,6 +47,7 @@ export abstract class Gene {
   }
 }
 
+// TODO - continue if less than gene
 export class MaxTotalGene extends Gene {
   public readonly type: GeneType = GeneType.MAX_TOTAL;
 
@@ -54,6 +56,7 @@ export class MaxTotalGene extends Gene {
   }
 }
 
+// TODO - continue if less than gene
 export class MaxRiskGene extends Gene {
   private static TOTAL_CARDS_IN_DECK: number = 78;
 
@@ -71,14 +74,8 @@ export class MaxRiskGene extends Gene {
   }
 }
 
-// TODO - should this be included with other ones or something? I feel it should be an and
-// e.g, risk and this seeem similar right?
-// currentlt his is useless
-// should it be a range, so always conitue if greater than 5 cards, elkse ignore this etc?
-// would mean these can't just say when to STOP but also when to CONTINUE
-// so I guess rather than returning a boolean, return an enum of STOP, CONTINUE, DELEGATE_TO_OTHER
 export class CurrentNumberCards extends Gene {
-  public readonly type: GeneType = GeneType.CARD_COUNT;
+  public readonly type: GeneType = GeneType.MIN_CARD_COUNT;
 
   public stopHandler(total: number, taken: Set<number>): Decision {
     return taken.size > this._val ? Decision.CONTINUE : Decision.DELEGATE;
