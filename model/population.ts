@@ -1,3 +1,4 @@
+import { environment } from "../environment";
 import { Game } from "./games";
 import { Individual } from "./individual";
 
@@ -7,15 +8,11 @@ type FitnessWrapper = {
 };
 
 export class Population {
-  private static readonly GAMES: number = 100;
-
-  private static readonly PLAYERS_PER_GAME: number = 4;
-
   public static initialise(size: number): Population {
     return new Population(
-      new Array(size * Population.PLAYERS_PER_GAME)
+      new Array(size * environment.playersPerGame)
         .fill(null)
-        .map((_: null, index: number) => Individual.generate(index))
+        .map((_: null, index: number) => Individual.generate())
     );
   }
 
@@ -31,8 +28,8 @@ export class Population {
 
   // TODO - do I want them to play the same people G times, or reshuffle everytime
   private _sortbyFitness(individuals: Individual[]): FitnessWrapper[] {
-    const fitnessMap: Record<number, number> = individuals.reduce(
-      (returnMap: Record<number, number>, current: Individual) => {
+    const fitnessMap: Record<string, number> = individuals.reduce(
+      (returnMap: Record<string, number>, current: Individual) => {
         returnMap[current.id] = 0;
         return returnMap;
       },
@@ -43,12 +40,13 @@ export class Population {
 
     while (toProcess.length) {
       const playerGroup: Individual[] = [];
-      for (let i = 0; i < Population.PLAYERS_PER_GAME; i++) {
+      for (let i = 0; i < environment.playersPerGame; i++) {
         const index: number = Math.floor(Math.random() * toProcess.length);
         playerGroup.push(toProcess.splice(index, 1)[0]);
       }
 
-      for (let i = 0; i < Population.GAMES; i++) {
+      for (let i = 0; i < environment.gamesPerFitnessCalculation; i++) {
+        // do I want to take into account how quickly they won?
         const roundWinner: Individual | null = Game.create(playerGroup).play();
         if (roundWinner) {
           fitnessMap[roundWinner.id] += 1;
@@ -85,7 +83,7 @@ export class Population {
     // TODO - to pick, do I do the number line thing with (1 / fitness) ^ 2 ? OR do I just pick the first like, 10% as here? to send to the new one?
     const newPopulation: Individual[] = this._members
       .slice(0, Math.floor(this._members.length / 10))
-      .map(({ individual }, index: number) => individual.changeId(index));
+      .map(({ individual }) => individual);
 
     while (newPopulation.length < this._members.length) {
       // TODO - currentl pick from top 50% to mate, should it be better?
@@ -97,7 +95,7 @@ export class Population {
         this._members[
           Math.floor(Math.random() * Math.floor(this._members.length / 2))
         ].individual;
-      newPopulation.push(individual1.mate(this._members.length, individual2));
+      newPopulation.push(individual1.mate(individual2));
     }
 
     newPopulation.forEach((individual: Individual) => individual.mutate());
@@ -105,10 +103,10 @@ export class Population {
     return new Population(newPopulation);
   }
 
-  public printTopN(n: number): void {
+  public printTopN(n?: number): void {
     console.log(
-      this._members
-        .slice(0, n)
+      ...this._members
+        .slice(0, n || this._members.length)
         .map((f: FitnessWrapper) => [f.fitness, f.individual.geneString])
     );
   }

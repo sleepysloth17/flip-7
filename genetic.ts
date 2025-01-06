@@ -1,5 +1,6 @@
 import { Population } from "./model/population";
 import { Individual } from "./model/individual";
+import { environment } from "./environment";
 
 /**
  * 1) Randomly initialize populations p
@@ -7,6 +8,7 @@ import { Individual } from "./model/individual";
  * 3) Until convergence evolve
  */
 const run: (size: number) => Individual[] = (size: number) => {
+  console.time();
   let population: Population = Population.initialise(size);
   while (!population.converged()) {
     console.log("-".repeat(process.stdout.columns));
@@ -14,8 +16,9 @@ const run: (size: number) => Individual[] = (size: number) => {
     population = population.evolve();
   }
   console.log("-".repeat(process.stdout.columns));
-  population.printTopN(20);
+  population.printTopN();
+  console.timeEnd();
   return population.members;
 };
 
-run(10);
+run(environment.populationSize);

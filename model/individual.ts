@@ -1,25 +1,16 @@
-import {
-  MaxTotalGene,
-  MaxRiskGene,
-  CurrentNumberCards,
-  Gene,
-  GeneType,
-  Decision,
-} from "./gene";
+import { environment } from "../environment";
+import { Gene, GeneType } from "./gene";
 import { GeneFactory } from "./gene/gene-factory";
 import { strategyHandler } from "./strategy";
 
 export class Individual {
-  private static readonly MUTATION_CHANCE: number = 0.3;
-  private static readonly CROSSOVER_CHANCE: number = 0.4;
-
-  public static generate(id: number): Individual {
+  public static generate(id?: string): Individual {
     return new Individual(
-      id,
+      id || crypto.randomUUID(),
       GeneFactory.generateForList([
         GeneType.MAX_TOTAL,
-        GeneType.MAX_RISK,
-        GeneType.MIN_CARD_COUNT,
+        // GeneType.MAX_RISK,
+        // GeneType.MIN_CARD_COUNT,
       ])
     );
   }
@@ -32,7 +23,7 @@ export class Individual {
 
   private readonly _genes: Record<GeneType, Gene>;
 
-  constructor(public readonly id: number, geneList: Gene[]) {
+  constructor(public readonly id: string, geneList: Gene[]) {
     this._genes = geneList.reduce(
       (returnMap: Record<GeneType, Gene>, current: Gene) => {
         returnMap[current.type] = current;
@@ -42,25 +33,22 @@ export class Individual {
     );
   }
 
-  public changeId(id: number): Individual {
-    return new Individual(id, Object.values(this._genes));
-  }
-
-  public mate(newId: number, other: Individual): Individual {
+  public mate(other: Individual): Individual {
     const newGenes: Gene[] = [];
     for (const gene of Object.values(this._genes)) {
-      if (Math.random() < Individual.CROSSOVER_CHANCE) {
+      if (Math.random() < environment.crossoverChance) {
         newGenes.push(other._genes[gene.type]);
       } else {
         newGenes.push(gene);
       }
     }
 
-    return new Individual(newId, newGenes);
+    return new Individual(crypto.randomUUID(), newGenes);
   }
 
+  // TODO - this should be better
   public mutate(): Individual {
-    if (Math.random() < Individual.MUTATION_CHANCE) {
+    if (Math.random() < environment.mutationChance) {
       return Individual.generate(this.id);
     }
 

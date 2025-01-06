@@ -1,3 +1,4 @@
+import { environment } from "../environment";
 import { Individual } from "./individual";
 
 type PlayerStatus = {
@@ -6,11 +7,6 @@ type PlayerStatus = {
 };
 
 export class Game {
-  private static readonly GOAL: number = 200;
-
-  // it looks like, if you aim for ~21pts a hand you win in 10-11 turns, so have picked this off the back of that
-  private static readonly MAX_ROUNDS_PER_GAME: number = 40;
-
   public static create(individuals: Individual[]): Game {
     return new Game(individuals, Deck.create());
   }
@@ -20,8 +16,8 @@ export class Game {
   // play the game and return the winner
   public play(): Individual | null {
     let winner: { individual: Individual; score: number } | null = null;
-    let scores: Record<number, number> = this._individuals.reduce(
-      (returnMap: Record<number, number>, current: Individual) => {
+    let scores: Record<string, number> = this._individuals.reduce(
+      (returnMap: Record<string, number>, current: Individual) => {
         returnMap[current.id] = 0;
         return returnMap;
       },
@@ -30,15 +26,15 @@ export class Game {
     let rounds: number = 0;
 
     while (!winner) {
-      const roundResults: Record<number, PlayerStatus> = this._round(scores, [
+      const roundResults: Record<string, PlayerStatus> = this._round(scores, [
         ...this._individuals,
       ]);
       Object.keys(roundResults).forEach((key: string) => {
-        scores[+key] += roundResults[+key].total;
+        scores[key] += roundResults[key].total;
       });
 
       for (const individual of this._individuals) {
-        if (scores[individual.id] >= Game.GOAL) {
+        if (scores[individual.id] >= environment.goal) {
           winner =
             !winner || winner.score < scores[individual.id]
               ? { individual, score: scores[individual.id] }
@@ -48,7 +44,7 @@ export class Game {
 
       rounds++;
 
-      if (rounds > Game.MAX_ROUNDS_PER_GAME) {
+      if (rounds > environment.maxRoundsPerGame) {
         return null; // everyone is bad, we should really stop
       }
     }
@@ -58,11 +54,11 @@ export class Game {
 
   // goes until one player has 7, or everyone is out or has stopped
   private _round(
-    scores: Record<number, number>,
+    scores: Record<string, number>,
     playersInRound: Individual[]
-  ): Record<number, PlayerStatus> {
-    const roundScore: Record<number, PlayerStatus> = playersInRound.reduce(
-      (returnMap: Record<number, PlayerStatus>, current: Individual) => {
+  ): Record<string, PlayerStatus> {
+    const roundScore: Record<string, PlayerStatus> = playersInRound.reduce(
+      (returnMap: Record<string, PlayerStatus>, current: Individual) => {
         returnMap[current.id] = {
           total: 0,
           taken: new Set(),
@@ -102,7 +98,10 @@ export class Game {
             roundScore[individual.id].taken.add(draw);
             roundScore[individual.id].total += draw;
 
-            if (roundScore[individual.id].taken.size === 7) {
+            if (
+              roundScore[individual.id].taken.size ===
+              environment.maxNumberOfCards
+            ) {
               roundScore[individual.id].total += 15;
               return roundScore;
             }
@@ -111,7 +110,7 @@ export class Game {
 
         if (
           scores[individual.id] + roundScore[individual.id].total >=
-          Game.GOAL
+          environment.goal
         ) {
           return roundScore;
         }

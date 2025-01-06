@@ -1,3 +1,5 @@
+import { environment } from "../environment";
+
 export enum Decision {
   STOP,
   CONTINUE,
@@ -58,8 +60,6 @@ export class MaxTotalGene extends Gene {
 
 // TODO - continue if less than gene
 export class MaxRiskGene extends Gene {
-  private static TOTAL_CARDS_IN_DECK: number = 78;
-
   public readonly type: GeneType = GeneType.MAX_RISK;
 
   // TODO - I'm not sure this is correct tbh, it aligns with max total, I need to do the maths and see if it should be simplified this much
@@ -67,8 +67,7 @@ export class MaxRiskGene extends Gene {
   public stopHandler(total: number, taken: Set<number>): Decision {
     const remaining: number = [...taken].reduce((a, b) => a + b, -taken.size);
 
-    return remaining / (MaxRiskGene.TOTAL_CARDS_IN_DECK - taken.size) >
-      this._val
+    return remaining / (environment.cardsInDeck - taken.size) > this._val
       ? Decision.STOP
       : Decision.DELEGATE;
   }

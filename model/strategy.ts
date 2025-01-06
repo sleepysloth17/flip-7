@@ -22,7 +22,7 @@ export const strategyHandler: (
       return returnMap;
     }, {} as Record<Decision, number>);
   // TODO - this should use the stragey gene that I shall add
-  return !decisions[Decision.CONTINUE] ? !!decisions[Decision.STOP] : false;
+  // return !decisions[Decision.CONTINUE] ? !!decisions[Decision.STOP] : false;
   return (
     !!decisions[Decision.STOP] &&
     decisions[Decision.STOP] > (decisions[Decision.CONTINUE] || 0)
