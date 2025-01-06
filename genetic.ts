@@ -7,6 +7,8 @@
 // };
 
 abstract class Gene {
+  protected abstract readonly _name: string;
+
   constructor(
     protected _val: number, // the val to use in the handler
     protected _use: boolean // true if we actually use this gene, to see which make a difference
@@ -26,15 +28,21 @@ abstract class Gene {
   public equals(other: Gene): boolean {
     return this._val === other._val && this._use === other._use;
   }
+
+  public toString(): string {
+    return `name: ${this._name}, val: ${this._val}, use: ${this._use}`;
+  }
 }
 
 class MaxTotalGene extends Gene {
+  protected readonly _name: string = "max-total";
   public stopHandler(total: number, taken: Set<number>): boolean {
     return total > this._val;
   }
 }
 
 class MaxRiskGene extends Gene {
+  protected readonly _name: string = "max-risk";
   public stopHandler(total: number, taken: Set<number>): boolean {
     return [...taken].reduce((a, b) => a + b, -taken.size) > this._val;
   }
@@ -60,6 +68,10 @@ class Individual {
     ]);
   }
 
+  public get geneString(): string[] {
+    return this._genes.map((gene: Gene) => gene.toString());
+  }
+
   constructor(private _genes: Gene[]) {}
 
   public crossover(other: Individual): Individual {
@@ -83,6 +95,7 @@ class Individual {
     return this;
   }
 
+  // check if any of the genes say to stop
   public stop(total: number, taken: Set<number>): boolean {
     return this._genes.some((gene: Gene) => gene.stop(total, taken));
   }
@@ -119,17 +132,6 @@ class Population {
 
   constructor(individuals: Individual[]) {
     this._members = this._sortbyFitness(individuals);
-    console.log(
-      this._members
-        .slice(0, 20)
-        .map((f: FitnessWrapper) => [
-          f.fitness,
-          (f.individual as any)._genes.flatMap((g: Gene) => [
-            (g as any)._val,
-            (g as any)._use,
-          ]),
-        ])
-    );
   }
 
   private _sortbyFitness(individuals: Individual[]): FitnessWrapper[] {
@@ -228,6 +230,14 @@ class Population {
 
     return new Population(newPopulation);
   }
+
+  public printTopN(n: number): void {
+    console.log(
+      this._members
+        .slice(0, n)
+        .map((f: FitnessWrapper) => [f.fitness, f.individual.geneString])
+    );
+  }
 }
 
 /**
@@ -239,6 +249,7 @@ const run: (size: number) => Individual[] = (size: number) => {
   let population: Population = Population.initialise(size);
   while (!population.converged()) {
     console.log("-".repeat(process.stdout.columns));
+    population.printTopN(20);
     population = population.evolve();
   }
   return population.members;
