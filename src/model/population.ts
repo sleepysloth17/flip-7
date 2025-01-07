@@ -1,6 +1,6 @@
 import { environment } from "../environment";
 import { shuffle } from "../util/array";
-import { Game } from "./games";
+import { Game } from "./game/game";
 import { Individual } from "./individual";
 
 type FitnessWrapper = {

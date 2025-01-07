@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "start:genetic": "ts-node src/genetic.ts",
+    "start:stats": "ts-node src/statistics.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

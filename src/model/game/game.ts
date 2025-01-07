@@ -1,25 +1,10 @@
-import { environment } from "../environment";
-import { shuffle } from "../util/array";
-import { Individual } from "./individual";
+import { environment } from "../../environment";
+import { Individual } from "../individual";
+import { Deck, Card, CardType } from "./deck";
 
-// TODO - this object should be bigger and I should be able to pass it into the stop handler
 type PlayerStatus = {
   total: number;
   taken: Set<number>;
-};
-
-type PlayerRoundState = {
-  total: number;
-  taken: Set<number>;
-};
-
-type GameState = {
-  scores: Record<string, number>;
-};
-
-type RoundState = {
-  numCardsLeftInDeck: number;
-  playerStatuses: Record<string, PlayerRoundState>;
 };
 
 export class Game {
@@ -129,70 +114,16 @@ export class Game {
           }
         }
 
-        if (
-          scores[individual.id] + roundScore[individual.id].total >=
-          environment.goal
-        ) {
-          return roundScore;
-        }
+        // game doesn't neccessarily stop, as you probably want to continue if someone has already won
+        // if (
+        //   scores[individual.id] + roundScore[individual.id].total >=
+        //   environment.goal
+        // ) {
+        //   return roundScore;
+        // }
       }
     }
 
     return roundScore;
   }
-}
-
-class Deck {
-  public static create(): Deck {
-    const deck: Deck = new Deck(
-      new Array(12)
-        .fill(null)
-        .flatMap((_: null, i: number) =>
-          new Array(i + 1)
-            .fill(i + 1)
-            .map((val: number) => new Card(CardType.NUMBER, val))
-        )
-        .concat(new Card(CardType.NUMBER, 0))
-        .concat(
-          new Card(CardType.SPECIAL_NUMBER, 2),
-          new Card(CardType.SPECIAL_NUMBER, 4),
-          new Card(CardType.SPECIAL_NUMBER, 6),
-          new Card(CardType.SPECIAL_NUMBER, 8),
-          new Card(CardType.SPECIAL_NUMBER, 10)
-        )
-    );
-    deck.reshuffle();
-    return deck;
-  }
-
-  private toDraw: number = 0;
-
-  constructor(private _deck: Card[]) {}
-
-  public reshuffle(): void {
-    shuffle(this._deck);
-    this.toDraw = 0;
-  }
-
-  // instead of all the splicing, do I want to shuffle then iterate along?
-  public draw(): Card {
-    return this._deck[this.toDraw++];
-  }
-
-  public isEmpty(): boolean {
-    return this.toDraw === this._deck.length;
-  }
-}
-
-enum CardType {
-  NUMBER = "NUMBER",
-  TIMES_TWO = "TIMES_TWO",
-  SPECIAL_NUMBER = "SPECIAL_NUMBER",
-  SECOND_CHANGE = "SECOND_CHANCE",
-  FREEZE = "FREEZE",
-  FLIP_THREE = "FLIP_THREE",
-}
-
-class Card {
-  constructor(public readonly type: CardType, public readonly value: number) {}
 }

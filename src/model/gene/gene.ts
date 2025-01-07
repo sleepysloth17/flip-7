@@ -7,6 +7,7 @@ export enum Decision {
 }
 
 // max stops there, min continues there
+// need to work out how to handle if someone has already won
 export enum GeneType {
   MAX_TOTAL = "MAX_TOTAL",
   MIN_TOTAL = "MIN_TOTAL", // TODO - continues
@@ -15,6 +16,7 @@ export enum GeneType {
   MIN_CARD_COUNT = "MIN_CARD_COUNT",
   MIN_DISTANCE_TO_NEXT_PLAYER = "MIN_DISTANCE_TO_NEXT_PLAYER", // TODO
   MIN_DISTANCE_TO_GOAL = "MIN_DISTANCE_TO_GOAL", // TODO
+  MAX_TOTAL_SCORE = "MAX_TOTAL_SCORE", // TODO
 }
 
 export abstract class Gene {

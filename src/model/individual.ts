@@ -64,7 +64,6 @@ export class Individual {
     return strategyHandler(total, taken, this._genes);
   }
 
-  // check all genes are equal
   public equals(other: Individual): boolean {
     return Object.values(this._genes).every((gene: Gene) =>
       gene.equals(other._genes[gene.type])
