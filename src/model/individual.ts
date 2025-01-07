@@ -7,34 +7,33 @@ export class Individual {
   public static generate(id?: string): Individual {
     return new Individual(
       id || crypto.randomUUID(),
-      GeneFactory.generateForList([
-        GeneType.MAX_TOTAL,
-        GeneType.MAX_RISK,
-        GeneType.MIN_CARD_COUNT,
-      ])
+      GeneFactory.generateForList(["MAX_TOTAL", "MAX_RISK", "MIN_CARD_COUNT"])
     );
   }
 
   public get geneString(): string {
     return Object.values(this._genes)
-      .map((gene: Gene<unknown>) => gene.toString())
+      .map((gene: Gene<GeneType>) => gene.toString())
       .join(" ");
   }
 
-  private readonly _genes: Record<GeneType, Gene<unknown>>;
+  private readonly _genes: Record<GeneType, Gene<GeneType>>;
 
-  constructor(public readonly id: string, geneList: Gene<unknown>[]) {
+  constructor(public readonly id: string, geneList: Gene<GeneType>[]) {
     this._genes = geneList.reduce(
-      (returnMap: Record<GeneType, Gene<unknown>>, current: Gene<unknown>) => {
+      (
+        returnMap: Record<GeneType, Gene<GeneType>>,
+        current: Gene<GeneType>
+      ) => {
         returnMap[current.type] = current;
         return returnMap;
       },
-      {} as Record<GeneType, Gene<unknown>>
+      {} as Record<GeneType, Gene<GeneType>>
     );
   }
 
   public mate(other: Individual): Individual {
-    const newGenes: Gene<unknown>[] = [];
+    const newGenes: Gene<GeneType>[] = [];
     for (const gene of Object.values(this._genes)) {
       if (Math.random() < environment.crossoverChance) {
         newGenes.push(other._genes[gene.type]);
@@ -48,7 +47,7 @@ export class Individual {
 
   // TODO - could be better
   public mutate(): Individual {
-    const newGenes: Gene<unknown>[] = [];
+    const newGenes: Gene<GeneType>[] = [];
     for (const gene of Object.values(this._genes)) {
       if (Math.random() < environment.mutationChance) {
         newGenes.push(GeneFactory.generate(gene.type));
@@ -65,7 +64,7 @@ export class Individual {
   }
 
   public equals(other: Individual): boolean {
-    return Object.values(this._genes).every((gene: Gene<unknown>) =>
+    return Object.values(this._genes).every((gene: Gene<GeneType>) =>
       gene.equals(other._genes[gene.type])
     );
   }

@@ -5,25 +5,25 @@ import { MaxTotalGene } from "./max-total-gene";
 import { MinCardCount } from "./min-card-count-gene";
 
 export class GeneFactory {
-  public static generateForList(geneTypes: GeneType[]): Gene<unknown>[] {
+  public static generateForList(geneTypes: GeneType[]): Gene<GeneType>[] {
     return geneTypes.map(GeneFactory.generate);
   }
 
-  public static generate(geneType: GeneType): Gene<unknown> {
+  public static generate(geneType: GeneType): Gene<GeneType> {
     switch (geneType) {
-      case GeneType.MAX_TOTAL: {
+      case "MAX_TOTAL": {
         return new MaxTotalGene(
           Math.floor(Math.random() * (environment.maxPossibleRoundScore + 1)),
           Math.random() < 0.5
         );
       }
-      case GeneType.MAX_RISK: {
+      case "MAX_RISK": {
         return new MaxRiskGene(
           Math.round(Math.random() * 100) / 100,
           Math.random() < 0.5
         );
       }
-      case GeneType.MIN_CARD_COUNT: {
+      case "MIN_CARD_COUNT": {
         return new MinCardCount(
           Math.floor(Math.random() * environment.maxNumberOfCards),
           Math.random() < 0.5

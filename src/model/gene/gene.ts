@@ -7,21 +7,35 @@ export enum Decision {
 // max stops there, min continues there
 // need to work out how to handle if someone has already won
 // TODO - I want to see fi I can do something cool using types e.g define the val type in here as well so it's aligned
-export enum GeneType {
-  MAX_TOTAL = "MAX_TOTAL",
-  MIN_TOTAL = "MIN_TOTAL", // TODO - continues
-  MAX_RISK = "MAX_RISK",
-  MIN_RISK = "MIN_RISK", // TODO - continues
-  MIN_CARD_COUNT = "MIN_CARD_COUNT",
-  MIN_DISTANCE_TO_NEXT_PLAYER = "MIN_DISTANCE_TO_NEXT_PLAYER", // TODO
-  MIN_DISTANCE_TO_GOAL = "MIN_DISTANCE_TO_GOAL", // TODO
-  MAX_TOTAL_SCORE = "MAX_TOTAL_SCORE", // TODO
-}
+// export enum GeneType {
+//   MAX_TOTAL = "MAX_TOTAL",
+//   MIN_TOTAL = "MIN_TOTAL", // TODO - continues
+//   MAX_RISK = "MAX_RISK",
+//   MIN_RISK = "MIN_RISK", // TODO - continues
+//   MIN_CARD_COUNT = "MIN_CARD_COUNT",
+//   MIN_DISTANCE_TO_NEXT_PLAYER = "MIN_DISTANCE_TO_NEXT_PLAYER", // TODO
+//   MIN_DISTANCE_TO_GOAL = "MIN_DISTANCE_TO_GOAL", // TODO
+//   MAX_TOTAL_SCORE = "MAX_TOTAL_SCORE", // TODO
+// }
+const GENE_TYPE = {
+  MAX_TOTAL: (arg: unknown) => arg as number,
+  MAX_RISK: (arg: unknown) => arg as number,
+  MIN_CARD_COUNT: (arg: unknown) => arg as number,
+  MAX_TOTAL_SCORE: (arg: unknown) => arg as number,
+} as const;
 
-export abstract class Gene<T> {
-  public abstract readonly type: GeneType;
+export type GeneType = keyof typeof GENE_TYPE;
 
-  constructor(protected _val: T, protected _use: boolean) {}
+type GeneValType<T extends GeneType> = (typeof GENE_TYPE)[T] extends (
+  arg: unknown
+) => infer R
+  ? R
+  : never;
+
+export abstract class Gene<T extends GeneType> {
+  public abstract readonly type: T;
+
+  constructor(protected _val: GeneValType<T>, protected _use: boolean) {}
 
   public stop(total: number, taken: Set<number>): Decision {
     if (this._use) {
@@ -33,7 +47,7 @@ export abstract class Gene<T> {
 
   protected abstract stopHandler(total: number, taken: Set<number>): Decision;
 
-  public equals<U>(other: Gene<U>): boolean {
+  public equals(other: Gene<T>): boolean {
     if (this.type !== other.type) {
       return false;
     } else if (!this._use) {
