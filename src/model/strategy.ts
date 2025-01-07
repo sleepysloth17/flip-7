@@ -1,4 +1,4 @@
-import { Decision, Gene, GeneType } from "./gene";
+import { Decision, Gene, GeneType } from "./gene/gene";
 
 // do I want to say, have DEFAULT_STOP or DEFAULT_CONTINUE and one continues if told, other stops if told
 export enum Strategy {
@@ -6,6 +6,7 @@ export enum Strategy {
   TORTOISE = "TORTOISE", // prefers to stop
 }
 
+// TODO - should the strategy gene basically be a list which is the order of operations and just accepts the first one?
 export const strategyHandler: (
   total: number,
   taken: Set<number>,

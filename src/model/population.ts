@@ -37,18 +37,20 @@ export class Population {
       {}
     );
 
-    shuffle(individuals);
+    // I reshuffle ever game as I figure if one individual wins one game in a group, it probably will win a whole bunch more
+    // this feels like it would be more useful to keep trying each individual against new groups
+    // it is slower though
+    for (let i = 0; i < environment.gamesPerFitnessCalculation; i++) {
+      shuffle(individuals);
+      let start: number = 0;
 
-    let start: number = 0;
+      while (start < individuals.length) {
+        const playerGroup: Individual[] = [];
+        for (let i = 0; i < environment.playersPerGame; i++) {
+          playerGroup.push(individuals[start]);
+          start++;
+        }
 
-    while (start < individuals.length) {
-      const playerGroup: Individual[] = [];
-      for (let i = 0; i < environment.playersPerGame; i++) {
-        playerGroup.push(individuals[start]);
-        start++;
-      }
-
-      for (let i = 0; i < environment.gamesPerFitnessCalculation; i++) {
         // do I want to take into account how quickly they won?
         const roundWinner: Individual | null = Game.create(playerGroup).play();
         if (roundWinner) {

@@ -1,4 +1,4 @@
-import { environment } from "../environment";
+import { environment } from "../../environment";
 
 export enum Decision {
   STOP,
@@ -13,6 +13,8 @@ export enum GeneType {
   MAX_RISK = "MAX_RISK",
   MIN_RISK = "MIN_RISK", // TODO - continues
   MIN_CARD_COUNT = "MIN_CARD_COUNT",
+  MIN_DISTANCE_TO_NEXT_PLAYER = "MIN_DISTANCE_TO_NEXT_PLAYER", // TODO
+  MIN_DISTANCE_TO_GOAL = "MIN_DISTANCE_TO_GOAL", // TODO
 }
 
 export abstract class Gene {
@@ -74,7 +76,7 @@ export class MaxRiskGene extends Gene {
   }
 }
 
-export class CurrentNumberCards extends Gene {
+export class MinCardCount extends Gene {
   public readonly type: GeneType = GeneType.MIN_CARD_COUNT;
 
   public stopHandler(total: number, taken: Set<number>): Decision {

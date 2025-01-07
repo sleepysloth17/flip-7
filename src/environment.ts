@@ -1,9 +1,9 @@
 export const environment: Readonly<Record<string, number>> = {
   // these should not be changed
   goal: 200,
-  cardsInDeck: 78,
+  cardsInDeck: 84,
   maxNumberOfCards: 7,
-  maxPossibleRoundScore: 78,
+  maxPossibleRoundScore: 108, // includes special numbered cards but not the bonus 15
   // these can be tweeked like playing the games
   playersPerGame: 4,
   // genetic algorithm settings

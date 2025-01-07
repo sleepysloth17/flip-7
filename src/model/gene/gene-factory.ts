@@ -1,11 +1,11 @@
 import { environment } from "../../environment";
 import {
-  CurrentNumberCards,
+  MinCardCount,
   Gene,
   GeneType,
   MaxRiskGene,
   MaxTotalGene,
-} from "../gene";
+} from "./gene";
 
 export class GeneFactory {
   public static generateForList(geneTypes: GeneType[]): Gene[] {
@@ -27,7 +27,7 @@ export class GeneFactory {
         );
       }
       case GeneType.MIN_CARD_COUNT: {
-        return new CurrentNumberCards(
+        return new MinCardCount(
           Math.floor(Math.random() * environment.maxNumberOfCards),
           Math.random() < 0.5
         );

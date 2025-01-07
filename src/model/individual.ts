@@ -1,5 +1,5 @@
 import { environment } from "../environment";
-import { Gene, GeneType } from "./gene";
+import { Gene, GeneType } from "./gene/gene";
 import { GeneFactory } from "./gene/gene-factory";
 import { strategyHandler } from "./strategy";
 
@@ -9,8 +9,8 @@ export class Individual {
       id || crypto.randomUUID(),
       GeneFactory.generateForList([
         GeneType.MAX_TOTAL,
-        // GeneType.MAX_RISK,
-        // GeneType.MIN_CARD_COUNT,
+        GeneType.MAX_RISK,
+        GeneType.MIN_CARD_COUNT,
       ])
     );
   }

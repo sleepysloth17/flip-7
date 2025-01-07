@@ -8,6 +8,20 @@ type PlayerStatus = {
   taken: Set<number>;
 };
 
+type PlayerRoundState = {
+  total: number;
+  taken: Set<number>;
+};
+
+type GameState = {
+  scores: Record<string, number>;
+};
+
+type RoundState = {
+  numCardsLeftInDeck: number;
+  playerStatuses: Record<string, PlayerRoundState>;
+};
+
 export class Game {
   public static create(individuals: Individual[]): Game {
     return new Game(individuals, Deck.create());
