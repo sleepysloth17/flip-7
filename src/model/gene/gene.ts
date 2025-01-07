@@ -1,5 +1,3 @@
-import { environment } from "../../environment";
-
 export enum Decision {
   STOP,
   CONTINUE,
@@ -8,6 +6,7 @@ export enum Decision {
 
 // max stops there, min continues there
 // need to work out how to handle if someone has already won
+// TODO - I want to see fi I can do something cool using types e.g define the val type in here as well so it's aligned
 export enum GeneType {
   MAX_TOTAL = "MAX_TOTAL",
   MIN_TOTAL = "MIN_TOTAL", // TODO - continues
@@ -49,38 +48,5 @@ export abstract class Gene<T> {
 
   public toString(): string {
     return `{name: ${this.type}, val: ${this._val}, use: ${this._use}}`;
-  }
-}
-
-// TODO - continue if less than gene
-export class MaxTotalGene extends Gene<number> {
-  public readonly type: GeneType = GeneType.MAX_TOTAL;
-
-  public stopHandler(total: number, taken: Set<number>): Decision {
-    return total > this._val ? Decision.STOP : Decision.DELEGATE;
-  }
-}
-
-// TODO - continue if less than gene
-export class MaxRiskGene extends Gene<number> {
-  public readonly type: GeneType = GeneType.MAX_RISK;
-
-  // TODO - I'm not sure this is correct tbh, it aligns with max total, I need to do the maths and see if it should be simplified this much
-  // do some maths bby
-  // this should take into account the current size of the deck and the other cards tha thave gone BUT SHOULD EASILY BE CALCAULABLE
-  public stopHandler(total: number, taken: Set<number>): Decision {
-    const remaining: number = [...taken].reduce((a, b) => a + b, -taken.size);
-
-    return remaining / (environment.cardsInDeck - taken.size) > this._val
-      ? Decision.STOP
-      : Decision.DELEGATE;
-  }
-}
-
-export class MinCardCount extends Gene<number> {
-  public readonly type: GeneType = GeneType.MIN_CARD_COUNT;
-
-  public stopHandler(total: number, taken: Set<number>): Decision {
-    return taken.size > this._val ? Decision.CONTINUE : Decision.DELEGATE;
   }
 }

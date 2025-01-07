@@ -1,11 +1,8 @@
 import { environment } from "../../environment";
-import {
-  MinCardCount,
-  Gene,
-  GeneType,
-  MaxRiskGene,
-  MaxTotalGene,
-} from "./gene";
+import { GeneType, Gene } from "./gene";
+import { MaxRiskGene } from "./max-risk-gene";
+import { MaxTotalGene } from "./max-total-gene";
+import { MinCardCount } from "./min-card-count-gene";
 
 export class GeneFactory {
   public static generateForList(geneTypes: GeneType[]): Gene<unknown>[] {
