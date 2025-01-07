@@ -19,14 +19,10 @@ export enum GeneType {
   MAX_TOTAL_SCORE = "MAX_TOTAL_SCORE", // TODO
 }
 
-export abstract class Gene {
+export abstract class Gene<T> {
   public abstract readonly type: GeneType;
 
-  constructor(
-    // TODO - generic val?
-    protected _val: number,
-    protected _use: boolean
-  ) {}
+  constructor(protected _val: T, protected _use: boolean) {}
 
   public stop(total: number, taken: Set<number>): Decision {
     if (this._use) {
@@ -38,14 +34,17 @@ export abstract class Gene {
 
   protected abstract stopHandler(total: number, taken: Set<number>): Decision;
 
-  public equals(other: Gene): boolean {
+  public equals<U>(other: Gene<U>): boolean {
     if (this.type !== other.type) {
       return false;
     } else if (!this._use) {
       return !other._use;
     }
 
-    return this._val === other._val && this._use === other._use;
+    // we can cast as we do a type check above
+    return (
+      this._val === (other._val as unknown as T) && this._use === other._use
+    );
   }
 
   public toString(): string {
@@ -54,7 +53,7 @@ export abstract class Gene {
 }
 
 // TODO - continue if less than gene
-export class MaxTotalGene extends Gene {
+export class MaxTotalGene extends Gene<number> {
   public readonly type: GeneType = GeneType.MAX_TOTAL;
 
   public stopHandler(total: number, taken: Set<number>): Decision {
@@ -63,7 +62,7 @@ export class MaxTotalGene extends Gene {
 }
 
 // TODO - continue if less than gene
-export class MaxRiskGene extends Gene {
+export class MaxRiskGene extends Gene<number> {
   public readonly type: GeneType = GeneType.MAX_RISK;
 
   // TODO - I'm not sure this is correct tbh, it aligns with max total, I need to do the maths and see if it should be simplified this much
@@ -78,7 +77,7 @@ export class MaxRiskGene extends Gene {
   }
 }
 
-export class MinCardCount extends Gene {
+export class MinCardCount extends Gene<number> {
   public readonly type: GeneType = GeneType.MIN_CARD_COUNT;
 
   public stopHandler(total: number, taken: Set<number>): Decision {

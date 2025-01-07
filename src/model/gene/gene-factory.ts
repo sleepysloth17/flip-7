@@ -8,11 +8,11 @@ import {
 } from "./gene";
 
 export class GeneFactory {
-  public static generateForList(geneTypes: GeneType[]): Gene[] {
+  public static generateForList(geneTypes: GeneType[]): Gene<unknown>[] {
     return geneTypes.map(GeneFactory.generate);
   }
 
-  public static generate(geneType: GeneType): Gene {
+  public static generate(geneType: GeneType): Gene<unknown> {
     switch (geneType) {
       case GeneType.MAX_TOTAL: {
         return new MaxTotalGene(

@@ -10,14 +10,14 @@ export enum Strategy {
 export const strategyHandler: (
   total: number,
   taken: Set<number>,
-  genes: Record<GeneType, Gene>
+  genes: Record<GeneType, Gene<unknown>>
 ) => boolean = (
   total: number,
   taken: Set<number>,
-  genes: Record<GeneType, Gene>
+  genes: Record<GeneType, Gene<unknown>>
 ) => {
   const decisions: Record<Decision, number> = Object.values(genes)
-    .map((gene: Gene) => gene.stop(total, taken))
+    .map((gene: Gene<unknown>) => gene.stop(total, taken))
     .reduce((returnMap: Record<Decision, number>, current: Decision) => {
       returnMap[current] = (returnMap[current] || 0) + 1;
       return returnMap;
