@@ -25,6 +25,7 @@ const GENE_TYPE = {
   MAX_TOTAL_SCORE: (arg: unknown) => arg as number, // if you have max total score X, stop
   MIN_DISTANCE_TO_NEXT_PLAYER: (arg: unknown) => arg as number, // if you are more than X behind the next player, continue
   MIN_DISTANCE_TO_GOAL: (arg: unknown) => arg as number, // if you are X away from the goal, continue
+  CONTINUE_IF_PLAYER_WILL_WIN: (arg: unknown) => arg as boolean, // true if we should continue if a player will win the next round
 } as const;
 
 export type GeneType = keyof typeof GENE_TYPE;
@@ -72,6 +73,8 @@ export abstract class Gene<T extends GeneType> {
   }
 
   public toString(): string {
-    return `{name: ${this.type}, val: ${this._val}, use: ${this._use}}`;
+    return this._use
+      ? `{name: ${this.type}, val: ${this._val}, use: ${this._use}}`
+      : "";
   }
 }
