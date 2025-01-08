@@ -1,7 +1,7 @@
 export enum Decision {
-  STOP,
-  CONTINUE,
-  DELEGATE,
+  STOP = "STOP",
+  CONTINUE = "CONTINUE",
+  DELEGATE = "DELEGATE",
 }
 
 // max stops there, min continues there

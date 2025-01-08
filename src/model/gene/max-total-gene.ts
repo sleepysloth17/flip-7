@@ -4,7 +4,7 @@ import { Gene, GeneType, Decision } from "./gene";
 export class MaxTotalGene extends Gene<"MAX_TOTAL"> {
   public type: "MAX_TOTAL" = "MAX_TOTAL";
 
-  public stopHandler(total: number, taken: Set<number>): Decision {
+  protected stopHandler(total: number, taken: Set<number>): Decision {
     return total > this._val ? Decision.STOP : Decision.DELEGATE;
   }
 }

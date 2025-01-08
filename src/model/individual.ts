@@ -1,25 +1,30 @@
 import { environment } from "../environment";
 import { Gene, GeneType } from "./gene/gene";
 import { GeneFactory } from "./gene/gene-factory";
-import { strategyHandler } from "./strategy";
+import { Strategy, StrategyType } from "./strategy";
 
 export class Individual {
   public static generate(id?: string): Individual {
     return new Individual(
       id || crypto.randomUUID(),
+      Math.random() > 0.5 ? "HARE" : "TORTOISE",
       GeneFactory.generateForList(["MAX_TOTAL", "MAX_RISK", "MIN_CARD_COUNT"])
     );
   }
 
   public get geneString(): string {
-    return Object.values(this._genes)
+    return `${this.strategy} ${Object.values(this._genes)
       .map((gene: Gene<GeneType>) => gene.toString())
-      .join(" ");
+      .join(" ")}`;
   }
 
   private readonly _genes: Record<GeneType, Gene<GeneType>>;
 
-  constructor(public readonly id: string, geneList: Gene<GeneType>[]) {
+  constructor(
+    public readonly id: string,
+    public strategy: StrategyType,
+    geneList: Gene<GeneType>[]
+  ) {
     this._genes = geneList.reduce(
       (
         returnMap: Record<GeneType, Gene<GeneType>>,
@@ -42,7 +47,9 @@ export class Individual {
       }
     }
 
-    return new Individual(crypto.randomUUID(), newGenes);
+    return Math.random() < environment.crossoverChance
+      ? new Individual(crypto.randomUUID(), other.strategy, newGenes)
+      : new Individual(crypto.randomUUID(), this.strategy, newGenes);
   }
 
   // TODO - could be better
@@ -56,11 +63,17 @@ export class Individual {
       }
     }
 
-    return new Individual(this.id, newGenes);
+    return Math.random() < environment.mutationChance
+      ? new Individual(
+          this.id,
+          Math.random() < 0.5 ? "HARE" : "TORTOISE",
+          newGenes
+        )
+      : new Individual(this.id, this.strategy, newGenes);
   }
 
   public stop(total: number, taken: Set<number>): boolean {
-    return strategyHandler(total, taken, this._genes);
+    return Strategy[this.strategy](total, taken, this._genes);
   }
 
   public equals(other: Individual): boolean {
