@@ -1,11 +1,7 @@
 import { environment } from "../../environment";
 import { Individual } from "../individual";
 import { Deck, Card, CardType } from "./deck";
-
-type PlayerStatus = {
-  total: number;
-  taken: Set<number>;
-};
+import { GameState, RoundState, PlayerRoundState } from "./state";
 
 export class Game {
   public static create(individuals: Individual[]): Game {
@@ -17,28 +13,30 @@ export class Game {
   // play the game and return the winner
   public play(): Individual | null {
     let winner: { individual: Individual; score: number } | null = null;
-    let scores: Record<string, number> = this._individuals.reduce(
-      (returnMap: Record<string, number>, current: Individual) => {
-        returnMap[current.id] = 0;
-        return returnMap;
-      },
-      {}
-    );
+    let gameState: GameState = {
+      scores: this._individuals.reduce(
+        (returnMap: Record<string, number>, current: Individual) => {
+          returnMap[current.id] = 0;
+          return returnMap;
+        },
+        {}
+      ),
+    };
     let rounds: number = 0;
 
     while (!winner) {
-      const roundResults: Record<string, PlayerStatus> = this._round(scores, [
+      const roundState: RoundState = this._round(gameState, [
         ...this._individuals,
       ]);
-      Object.keys(roundResults).forEach((key: string) => {
-        scores[key] += roundResults[key].total;
+      Object.keys(roundState.playerRoundStates).forEach((key: string) => {
+        gameState.scores[key] += roundState.playerRoundStates[key].total;
       });
 
       for (const individual of this._individuals) {
-        if (scores[individual.id] >= environment.goal) {
+        if (gameState.scores[individual.id] >= environment.goal) {
           winner =
-            !winner || winner.score < scores[individual.id]
-              ? { individual, score: scores[individual.id] }
+            !winner || winner.score < gameState.scores[individual.id]
+              ? { individual, score: gameState.scores[individual.id] }
               : winner;
         }
       }
@@ -55,19 +53,22 @@ export class Game {
 
   // goes until one player has 7, or everyone is out or has stopped
   private _round(
-    scores: Record<string, number>,
+    gameState: GameState,
     playersInRound: Individual[]
-  ): Record<string, PlayerStatus> {
-    const roundScore: Record<string, PlayerStatus> = playersInRound.reduce(
-      (returnMap: Record<string, PlayerStatus>, current: Individual) => {
-        returnMap[current.id] = {
-          total: 0,
-          taken: new Set(),
-        };
-        return returnMap;
-      },
-      {}
-    );
+  ): RoundState {
+    const roundState: RoundState = {
+      numCardsLeftInDeck: this._deck.size,
+      playerRoundStates: playersInRound.reduce(
+        (returnMap: Record<string, PlayerRoundState>, current: Individual) => {
+          returnMap[current.id] = {
+            total: 0,
+            taken: new Set(),
+          };
+          return returnMap;
+        },
+        {}
+      ),
+    };
 
     while (playersInRound.length) {
       for (let i = 0; i < playersInRound.length; i++) {
@@ -76,13 +77,10 @@ export class Game {
         }
 
         const individual: Individual = playersInRound[i];
+        const playerRoundState: PlayerRoundState =
+          roundState.playerRoundStates[individual.id];
 
-        if (
-          individual.stop(
-            roundScore[individual.id].total,
-            roundScore[individual.id].taken
-          )
-        ) {
+        if (individual.stop(gameState, roundState)) {
           playersInRound.splice(0, 1);
           i--;
         } else {
@@ -90,40 +88,29 @@ export class Game {
 
           if (
             card.type === CardType.NUMBER &&
-            roundScore[individual.id].taken.has(card.value)
+            playerRoundState.taken.has(card.value)
           ) {
-            roundScore[individual.id] = {
-              total: 0,
-              taken: new Set(),
-            };
+            playerRoundState.total = 0;
+            playerRoundState.taken = new Set();
             playersInRound.splice(0, 1);
             i--;
           } else {
             if (card.type === CardType.NUMBER) {
-              roundScore[individual.id].taken.add(card.value);
+              playerRoundState.taken.add(card.value);
             }
-            roundScore[individual.id].total += card.value;
+            playerRoundState.total += card.value;
 
-            if (
-              roundScore[individual.id].taken.size ===
-              environment.maxNumberOfCards
-            ) {
-              roundScore[individual.id].total += 15;
-              return roundScore;
+            if (playerRoundState.taken.size === environment.maxNumberOfCards) {
+              playerRoundState.total += 15;
+              return roundState;
             }
           }
         }
 
-        // game doesn't neccessarily stop, as you probably want to continue if someone has already won
-        // if (
-        //   scores[individual.id] + roundScore[individual.id].total >=
-        //   environment.goal
-        // ) {
-        //   return roundScore;
-        // }
+        roundState.numCardsLeftInDeck = this._deck.size;
       }
     }
 
-    return roundScore;
+    return roundState;
   }
 }

@@ -1,3 +1,5 @@
+import { GameState, RoundState } from "../game/state";
+
 export enum Decision {
   STOP = "STOP",
   CONTINUE = "CONTINUE",
@@ -15,13 +17,14 @@ export enum Decision {
 //   MIN_CARD_COUNT = "MIN_CARD_COUNT",
 //   MIN_DISTANCE_TO_NEXT_PLAYER = "MIN_DISTANCE_TO_NEXT_PLAYER", // TODO
 //   MIN_DISTANCE_TO_GOAL = "MIN_DISTANCE_TO_GOAL", // TODO
-//   MAX_TOTAL_SCORE = "MAX_TOTAL_SCORE", // TODO
 // }
 const GENE_TYPE = {
-  MAX_TOTAL: (arg: unknown) => arg as number,
-  MAX_RISK: (arg: unknown) => arg as number,
-  MIN_CARD_COUNT: (arg: unknown) => arg as number,
-  MAX_TOTAL_SCORE: (arg: unknown) => arg as number,
+  MAX_TOTAL: (arg: unknown) => arg as number, // max to take in a round
+  MAX_RISK: (arg: unknown) => arg as number, // max risk to take (rough percentage of failiure)
+  MIN_CARD_COUNT: (arg: unknown) => arg as number, // if you have at least X cards, continue
+  MAX_TOTAL_SCORE: (arg: unknown) => arg as number, // if you have max total score X, stop
+  MIN_DISTANCE_TO_NEXT_PLAYER: (arg: unknown) => arg as number, // if you are more than X behind the next player, continue
+  MIN_DISTANCE_TO_GOAL: (arg: unknown) => arg as number, // if you are X away from the goal, continue
 } as const;
 
 export type GeneType = keyof typeof GENE_TYPE;
@@ -37,15 +40,23 @@ export abstract class Gene<T extends GeneType> {
 
   constructor(protected _val: GeneValType<T>, protected _use: boolean) {}
 
-  public stop(total: number, taken: Set<number>): Decision {
+  public stop(
+    id: string,
+    gameState: GameState,
+    roundState: RoundState
+  ): Decision {
     if (this._use) {
-      return this.stopHandler(total, taken);
+      return this.stopHandler(id, gameState, roundState);
     } else {
       return Decision.DELEGATE;
     }
   }
 
-  protected abstract stopHandler(total: number, taken: Set<number>): Decision;
+  protected abstract stopHandler(
+    id: string,
+    gameState: GameState,
+    roundState: RoundState
+  ): Decision;
 
   public equals(other: Gene<T>): boolean {
     if (this.type !== other.type) {
