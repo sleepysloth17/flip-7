@@ -1,14 +1,21 @@
 import { environment } from "../environment";
+import { GameState, RoundState } from "./game/state";
 import { Gene, GeneType } from "./gene/gene";
 import { GeneFactory } from "./gene/gene-factory";
-import { Strategy, StrategyType } from "./strategy";
+import { randomStrategy, Strategy, StrategyType } from "./strategy";
 
 export class Individual {
   public static generate(id?: string): Individual {
     return new Individual(
       id || crypto.randomUUID(),
-      Math.random() > 0.5 ? "HARE" : "TORTOISE",
-      GeneFactory.generateForList(["MAX_TOTAL", "MAX_RISK", "MIN_CARD_COUNT"])
+      randomStrategy(),
+      GeneFactory.generateForList([
+        "MAX_TOTAL",
+        "MIN_CARD_COUNT",
+        "MAX_TOTAL_SCORE",
+        "MIN_DISTANCE_TO_NEXT_PLAYER",
+        "MIN_DISTANCE_TO_GOAL",
+      ])
     );
   }
 
@@ -64,16 +71,12 @@ export class Individual {
     }
 
     return Math.random() < environment.mutationChance
-      ? new Individual(
-          this.id,
-          Math.random() < 0.5 ? "HARE" : "TORTOISE",
-          newGenes
-        )
+      ? new Individual(this.id, randomStrategy(), newGenes)
       : new Individual(this.id, this.strategy, newGenes);
   }
 
-  public stop(total: number, taken: Set<number>): boolean {
-    return Strategy[this.strategy](total, taken, this._genes);
+  public stop(gameState: GameState, roundState: RoundState): boolean {
+    return Strategy[this.strategy](this.id, gameState, roundState, this._genes);
   }
 
   public equals(other: Individual): boolean {

@@ -36,6 +36,10 @@ export class Deck {
     return deck;
   }
 
+  public get size(): number {
+    return this._deck.length - this.toDraw;
+  }
+
   private toDraw: number = 0;
 
   constructor(private _deck: Card[]) {}

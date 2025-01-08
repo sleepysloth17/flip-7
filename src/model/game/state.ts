@@ -1,13 +1,13 @@
-type PlayerRoundState = {
+export type PlayerRoundState = {
   total: number;
   taken: Set<number>;
 };
 
-type GameState = {
+export type GameState = {
   scores: Record<string, number>;
 };
 
-type RoundState = {
+export type RoundState = {
   numCardsLeftInDeck: number;
-  playerStatuses: Record<string, PlayerRoundState>;
+  playerRoundStates: Record<string, PlayerRoundState>;
 };
