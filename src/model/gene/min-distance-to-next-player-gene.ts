@@ -23,7 +23,7 @@ export class MinDistanceToNextPlayerGene extends Gene<"MIN_DISTANCE_TO_NEXT_PLAY
 
     return playerIndex < currentPlayerScores.length - 1
       ? currentPlayerScores[playerIndex + 1].score -
-          currentPlayerScores[playerIndex].score <
+          currentPlayerScores[playerIndex].score >
         this._val
         ? Decision.CONTINUE
         : Decision.DELEGATE

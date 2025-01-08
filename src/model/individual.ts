@@ -15,6 +15,7 @@ export class Individual {
         "MAX_TOTAL_SCORE",
         "MIN_DISTANCE_TO_NEXT_PLAYER",
         "MIN_DISTANCE_TO_GOAL",
+        "CONTINUE_IF_PLAYER_WILL_WIN",
       ])
     );
   }
@@ -22,6 +23,7 @@ export class Individual {
   public get geneString(): string {
     return `${this.strategy} ${Object.values(this._genes)
       .map((gene: Gene<GeneType>) => gene.toString())
+      .filter(Boolean)
       .join(" ")}`;
   }
 

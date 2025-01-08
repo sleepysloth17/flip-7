@@ -53,3 +53,4 @@ what about the individual has a straegy? e.g prefer CONTINUE, prefer STOP etc wh
 TODO:
 
 - Need speical card handler, as secdond chance etc should really be handled differently
+- should I be able to weight the decisions for the democratic ones?

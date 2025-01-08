@@ -1,4 +1,5 @@
 import { environment } from "../../environment";
+import { ContinueIfPlayerWillWinGene } from "./continue-if-player-will-win-gene";
 import { GeneType, Gene } from "./gene";
 import { MaxRiskGene } from "./max-risk-gene";
 import { MaxTotalGene } from "./max-total-gene";
@@ -45,6 +46,11 @@ export class GeneFactory {
       case "MIN_DISTANCE_TO_GOAL":
         return new MinDistanceToGoalGene(
           Math.floor(Math.random() * environment.goal),
+          Math.random() < 0.5
+        );
+      case "CONTINUE_IF_PLAYER_WILL_WIN":
+        return new ContinueIfPlayerWillWinGene(
+          Math.random() < 0.5,
           Math.random() < 0.5
         );
       default: {
